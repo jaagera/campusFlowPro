@@ -131,32 +131,91 @@ def view_ticket(tickets):
     else:
         display_ticket(ticket)
 
+ticket_before = get_ticket_by_id(tickets, ticket_id)
 
-def assign_existing_ticket(tickets):
-    """Assign a ticket to a staff member."""
+ticket = assign_ticket(tickets, ticket_id, staff_name)
+
+
+def assign_existing_ticket(tickets, events):
+    """Assign a ticket to a staff member and record the audit event."""
     ticket_id = input("Enter ticket ID: ")
     staff_name = input("Enter staff member's name: ")
 
     try:
+        ticket_before = get_ticket_by_id(tickets, ticket_id)
+
+        if ticket_before is None:
+            print("Could not assign ticket: Ticket not found.")
+            return
+
+        before_status = ticket_before["status"]
+        before_assignee = ticket_before.get("assigned_to")
+
         ticket = assign_ticket(tickets, ticket_id, staff_name)
+
         print(f"Ticket {ticket['id']} assigned to {ticket['assigned_to']}.")
+
+        record_event(
+            events,
+            ticket["id"],
+            "ASSIGN",
+            actor="user",
+            before_status=before_status,
+            after_status=ticket["status"],
+            details=(
+                f"Previous assignee: {before_assignee or 'Unassigned'}; "
+                f"New assignee: {ticket['assigned_to']}"
+            ),
+        )
+
         save_changes(tickets)
+        save_event_changes(events)
+
     except ValueError as error:
         print(f"Could not assign ticket: {error}")
 
 
-def update_ticket_status(tickets):
-    """Change a ticket's status."""
+
+
+def update_ticket_status(tickets, events):
+    """Change a ticket's status and record the audit event."""
     ticket_id = input("Enter ticket ID: ")
     print("Available statuses: open, in_progress, resolved")
     new_status = input("Enter the new status: ")
 
     try:
+        ticket_before = get_ticket_by_id(tickets, ticket_id)
+
+        if ticket_before is None:
+            print("Could not change status: Ticket not found.")
+            return
+
+        before_status = ticket_before["status"]
+
         ticket = change_status(tickets, ticket_id, new_status)
+
         print(f"Ticket {ticket['id']} status is now '{ticket['status']}'.")
+
+        record_event(
+            events,
+            ticket["id"],
+                        {
+                "open": "REOPEN",
+                "in_progress": "START",
+                "resolved": "RESOLVE",
+            }.get(ticket["status"], "START"),
+            actor="user",
+            before_status=before_status,
+            after_status=ticket["status"],
+            details=f"Status changed from {before_status} to {ticket['status']}",
+        )
+
         save_changes(tickets)
+        save_event_changes(events)
+
     except ValueError as error:
         print(f"Could not change status: {error}")
+
 
 
 def show_priority_queue(tickets):
@@ -183,30 +242,34 @@ def display_menu():
     print("5. Change ticket status")
     print("6. View priority queue")
     print("7. View reports")
+    print("8. View ticket history")
     print("0. Save and exit")
     print("=========================================")
 
 
 def main():
     """Start the CampusFlow application."""
+   
     try:
         tickets = load_tickets()
+        events = load_events()
     except StorageError as error:
-        print(f"Could not load tickets safely:\n{error}")
-        print("Fix the ticket file before restarting CampusFlow.")
+        print(f"Could not load data safely:\n{error}")
+        print("Fix the affected data file before restarting CampusFlow.")
         return
 
     print("Welcome to CampusFlow Helpdesk!")
     print(f"Loaded {len(tickets)} ticket(s).")
 
     actions = {
-        "1": lambda: create_new_ticket(tickets),
+        "1": lambda: create_new_ticket(tickets, events),
         "2": lambda: display_tickets(list_tickets(tickets)),
         "3": lambda: view_ticket(tickets),
-        "4": lambda: assign_existing_ticket(tickets),
-        "5": lambda: update_ticket_status(tickets),
+        "4": lambda: assign_existing_ticket(tickets, events),
+        "5": lambda: update_ticket_status(tickets, events),
         "6": lambda: show_priority_queue(tickets),
         "7": lambda: show_reports(tickets),
+        "8": lambda: view_ticket_history(events),
     }
 
     while True:
@@ -220,13 +283,14 @@ def main():
 
         if choice == "0":
             save_changes(tickets)
+            save_event_changes(events)
             print("Thank you for using CampusFlow!")
             break
 
         action = actions.get(choice)
 
         if action is None:
-            print("Invalid option. Please choose a number from 0 to 7.")
+            print("Invalid option. Please choose a number from 0 to 8.")
             continue
 
         try:
