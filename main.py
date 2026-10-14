@@ -1,3 +1,17 @@
+##NEW
+from campusflow.history import display_ticket_history
+
+from campusflow.reports import (
+    detect_duplicates,
+    display_sla_attention_queue,
+    display_ticket_metrics,
+)
+
+from campusflow.knowledge_lab import run_knowledge_lab
+
+
+
+
 """CampusFlow command-line helpdesk application."""
 
 from campusflow.tickets import (
