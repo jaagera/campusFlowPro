@@ -1,4 +1,9 @@
+
+from campusflow.storage import load_tickets, save_tickets, StorageError
+from campusflow.event_storage import load_events, save_events
+from campusflow.history import record_event, display_ticket_history
 ##NEW
+
 from campusflow.history import display_ticket_history
 
 from campusflow.reports import (
@@ -71,7 +76,15 @@ def save_changes(tickets):
         print("The changes may still exist in memory, but are not saved.")
 
 
-def create_new_ticket(tickets):
+def save_event_changes(events):
+    """Save audit events and report any saving errors."""
+    try:
+        save_events(events)
+    except (OSError, StorageError, TypeError, ValueError) as error:
+        print(f"Warning: Could not save audit events: {error}")
+
+
+def create_new_ticket(tickets, events):
     """Collect user input and create a ticket."""
     print("\n--- Create a Ticket ---")
 
@@ -88,9 +101,22 @@ def create_new_ticket(tickets):
             urgency,
             affected_users,
         )
+
         print(f"\nTicket {ticket['id']} created successfully.")
         display_ticket(ticket)
+
+        record_event(
+            events,
+            ticket["id"],
+            "CREATE",
+            actor="user",
+            after_status=ticket["status"],
+            details=f"Created ticket: {ticket['title']}",
+        )
+
         save_changes(tickets)
+        save_event_changes(events)
+
     except ValueError as error:
         print(f"\nCould not create ticket: {error}")
 
