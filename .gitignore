@@ -17,7 +17,10 @@ data/tickets.json
 # Environment variables and secrets
 .env
 .env.*
-!.env.exampledata/
+!.env.example
 *.bak
 *.history-backup
 __pycache__/
+
+data/
+*.save
