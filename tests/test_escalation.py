@@ -87,7 +87,7 @@ class TestEscalation(unittest.TestCase):
         self.tickets.append(make_ticket("T002"))
         escalate_overdue(self.tickets, self.events, LATE, "ops")
         ids = [e["event_id"] for e in self.events]
-        self.assertEqual(ids, ["E001", "E002"])
+        self.assertEqual(ids, ["E0001", "E0002"])
 
 
 class TestReopenCycle(unittest.TestCase):

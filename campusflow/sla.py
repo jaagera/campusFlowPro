@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from campusflow.history import record_event
 
 SLA_MINUTES = {
     "critical": 60,
@@ -82,16 +83,6 @@ def is_escalated_this_cycle(ticket):
     return ticket.get("escalated_cycle") == ticket["escalation_cycle"]
 
 
-def _next_event_id(events):
-    highest = 0
-    for event in events:
-        try:
-            highest = max(highest, int(str(event["event_id"]).lstrip("E")))
-        except (KeyError, ValueError):
-            continue
-    return f"E{highest + 1:03d}"
-
-
 def escalate_overdue(tickets, events, now=None, actor="operator"):
     """Create exactly one ESCALATE event per overdue ticket per SLA cycle.
 
@@ -113,18 +104,18 @@ def escalate_overdue(tickets, events, now=None, actor="operator"):
         if is_escalated_this_cycle(ticket):
             already += 1
             continue
-        event = {
-            "event_id": _next_event_id(events),
-            "ticket_id": ticket["id"],
-            "event_type": "ESCALATE",
-            "actor": actor,
-            "timestamp": to_iso(now),
-            "before_status": ticket["status"],
-            "after_status": ticket["status"],
-            "details": f"SLA cycle {ticket['escalation_cycle']} overdue "
-                       f"(due {ticket['due_at']})",
-        }
-        events.append(event)
+        # Record first: if it raises, the ticket has not been marked.
+        event = record_event(
+            events,
+            ticket["id"],
+            "ESCALATE",
+            actor,
+            ticket["status"],
+            ticket["status"],
+            details=f"SLA cycle {ticket['escalation_cycle']} overdue "
+                    f"(due {ticket['due_at']})",
+            timestamp=now,
+        )
         ticket["escalated_cycle"] = ticket["escalation_cycle"]
         ticket["updated_at"] = to_iso(now)
         new_events.append(event)
