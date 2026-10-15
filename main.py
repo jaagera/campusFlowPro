@@ -131,11 +131,6 @@ def view_ticket(tickets):
     else:
         display_ticket(ticket)
 
-ticket_before = get_ticket_by_id(tickets, ticket_id)
-
-ticket = assign_ticket(tickets, ticket_id, staff_name)
-
-
 def assign_existing_ticket(tickets, events):
     """Assign a ticket to a staff member and record the audit event."""
     ticket_id = input("Enter ticket ID: ")

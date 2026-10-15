@@ -18,3 +18,9 @@ data/tickets.json
 .env
 .env.*
 !.env.example
+*.bak
+*.history-backup
+__pycache__/
+
+data/
+*.save
