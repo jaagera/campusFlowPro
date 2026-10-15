@@ -2,6 +2,11 @@
   {
     "event_id": "E0001",
     "ticket_id": "T001",
-    "event_type": "CREATE"
+    "event_type": "CREATE",
+    "actor": "user",
+    "timestamp": "2026-10-14T22:00:00+00:00",
+    "before_status": null,
+    "after_status": "open",
+    "details": "Storage test"
   }
 ]
