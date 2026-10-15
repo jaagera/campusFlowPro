@@ -3,8 +3,8 @@
 import copy
 
 from campusflow.duplicates import detect_duplicates
-from campusflow.history import record_event, utc_now
-from campusflow.sla import init_ticket_sla, restart_sla_cycle, to_iso
+from campusflow.history import record_event
+from campusflow.sla import init_ticket_sla, restart_sla_cycle, to_iso, utc_now
 from campusflow.tickets import create_ticket, get_ticket_by_id
 from campusflow.workflow import assign_ticket, change_status
 
