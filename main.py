@@ -232,6 +232,12 @@ def show_reports(tickets):
     print(format_report(report))
 
 
+def view_ticket_history(events):
+    """Display the audit history for a ticket."""
+    ticket_id = input("Enter ticket ID: ").strip()
+    display_ticket_history(events, ticket_id)
+
+
 def display_menu():
     """Display the main menu."""
     print("\n========== CampusFlow Helpdesk ==========")
