@@ -271,6 +271,7 @@ class TestTicketMetrics(unittest.TestCase):
                 "priority": "critical",
                 "due_at": (now - timedelta(minutes=1)).isoformat(),
                 "escalation_cycle": 0,
+                "escalated_cycle": 0,
             },
             {
                 "id": "T002",

@@ -181,16 +181,8 @@ def ticket_metrics(tickets, events, now=None):
             metrics["overdue_unresolved_count"] += 1
 
     for ticket in tickets:
-        current_cycle = ticket.get("escalation_cycle", 0)
-
-        has_current_escalation = any(
-            event.get("ticket_id") == ticket["id"]
-            and event.get("event_type") == "ESCALATE"
-            and event.get("escalation_cycle") == current_cycle
-            for event in events
-        )
-
-        if has_current_escalation:
+        marker = ticket.get("escalated_cycle")
+        if marker is not None and marker == ticket.get("escalation_cycle"):
             metrics["escalated_in_current_cycle_count"] += 1
 
     return metrics
